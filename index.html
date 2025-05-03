@@ -1,135 +1,174 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat Psicologo Rogersiano</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat Empatica - Stile Rogersiano</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body { background-color: #f8f9fa; padding: 20px; }
-    .chat-box {
-      height: 500px;
-      overflow-y: auto;
-      background: #ffffff;
-      padding: 15px;
+    body {
+      background-color: #f5f5f5;
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    .chat-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
       border-radius: 10px;
-      border: 1px solid #dee2e6;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .msg {
-      max-width: 75%;
-      padding: 10px 15px;
-      border-radius: 15px;
-      margin-bottom: 10px;
+
+    .input-area {
+      margin-bottom: 30px;
     }
+
+    .input-group input {
+      border-radius: 30px;
+      padding: 12px 20px;
+    }
+
+    .chat-message {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
     .user-msg {
-      background-color: #e2f0fb;
-      text-align: left;
       align-self: flex-start;
+      background-color: #d6eaff;
+      padding: 12px 18px;
+      border-radius: 20px;
+      max-width: 70%;
     }
+
     .bot-msg {
-      background-color: #d1f2e0;
-      text-align: left;
       align-self: flex-end;
+      background-color: #d2f4e8;
+      padding: 12px 18px;
+      border-radius: 20px;
+      max-width: 70%;
+    }
+
+    .divider {
+      border-top: 1px solid #ddd;
+      margin: 40px 0;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2 class="mb-4 text-center">Parla con lo Psicologo Rogersiano</h2>
+  <div class="chat-container">
+    <div class="input-area">
+      <label for="userInput" class="form-label"><strong>Esprimi un pensiero, un'emozione o una domanda...</strong></label>
+      <div class="input-group">
+        <input type="text" id="userInput" class="form-control" placeholder="Scrivi qui..." />
+        <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+      </div>
+    </div>
 
-  <div class="chat-box d-flex flex-column mb-3" id="chatbox">
-    <!-- Messaggi qui -->
+    <div class="divider"></div>
+
+    <div id="chatbox" class="d-flex flex-column">
+      <!-- Le risposte compariranno qui -->
+    </div>
   </div>
 
-  <div class="input-group">
-    <input type="text" id="userInput" class="form-control" placeholder="Scrivi qualcosa..." aria-label="Messaggio">
-    <button class="btn btn-success" onclick="sendMessage()">Invia</button>
-  </div>
-</div>
-
-<script>
-  const chatbox = document.getElementById("chatbox");
-  const history = [];
-
-  const emotions = {
-    "triste": ["triste", "giù", "depress*", "abbattuto", "sconsolato"],
-    "felice": ["felice", "content*", "gioios*", "sollevato"],
-    "ansioso": ["ansioso", "agitato", "in ansia", "preoccupato", "teso"],
-    "confuso": ["confuso", "disorientato", "non so", "incerto"],
-    "solo": ["solo", "isolato", "abbandonato", "incompreso"],
-    "spaventato": ["spaventato", "pauroso", "terrorizzato", "inquieto"]
-  };
-
-  const reflections = [
-    (f) => `Sento che stai provando qualcosa legato al sentirti ${f}. Ti va di raccontarmi meglio?`,
-    (f) => `Quando dici che ti senti ${f}, cosa succede dentro di te?`,
-    (f) => `Essere ${f} può avere molte sfumature... quale ti risuona di più in questo momento?`,
-    (f) => `Mi sembra che il sentirsi ${f} abbia un ruolo importante in ciò che stai vivendo.`,
-    (f) => `Hai nominato il sentirti ${f}. Vorrei restare un momento lì con te, se vuoi.`
-  ];
-
-  const genericResponses = [
-    (t) => `Ti ho ascoltato mentre dicevi: "${t}". Come ti sei sentito nel dirlo?`,
-    () => `Apprezzo che tu stia condividendo questo. Cosa significa per te?`,
-    () => `Resto qui con te. Vuoi esplorare meglio cosa senti ora?`,
-    () => `Mi interessa davvero comprendere il tuo vissuto. Raccontami ancora.`,
-    () => `Hai espresso qualcosa di autentico. Posso chiederti cosa ti ha spinto a farlo adesso?`
-  ];
-
-  function appendMessage(text, sender) {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `msg ${sender === 'user' ? 'user-msg align-self-start' : 'bot-msg align-self-end'}`;
-    msgDiv.textContent = text;
-    chatbox.appendChild(msgDiv);
-    chatbox.scrollTop = chatbox.scrollHeight;
-  }
-
-  function sendMessage() {
+  <script>
+    const chatbox = document.getElementById("chatbox");
     const input = document.getElementById("userInput");
-    const text = input.value.trim();
-    if (text === "") return;
-    appendMessage(text, "user");
-    history.push(text);
-    input.value = "";
-    setTimeout(() => respond(text), 700);
-  }
 
-  function detectEmotion(text) {
-    const lowerText = text.toLowerCase();
-    for (const [emotion, keywords] of Object.entries(emotions)) {
-      for (const keyword of keywords) {
-        const pattern = new RegExp(keyword.replace("*", ".*"), "i");
-        if (pattern.test(lowerText)) {
+    const emotionPatterns = {
+      tristezza: [/triste/i, /abbattuto/i, /giù/i, /sconsolato/i],
+      ansia: [/ansios[oa]/i, /agitato/i, /preoccupato/i, /paura/i],
+      felicità: [/felice/i, /content[oa]/i, /soddisfatt[oa]/i],
+      solitudine: [/sol[oa]/i, /isolato/i, /abbandonato/i],
+      rabbia: [/arrabbiat[oa]/i, /furios[oa]/i, /infastidito/i],
+      confusione: [/confus[oa]/i, /incert[oa]/i, /disorientato/i],
+    };
+
+    const responseTemplates = {
+      tristezza: [
+        "Capisco che possa esserci dolore dietro a quello che hai espresso.",
+        "È comprensibile sentirsi così. Vuoi raccontarmi da dove nasce questa tristezza?",
+        "A volte lasciarsi attraversare da ciò che fa male è il primo passo per capirsi davvero."
+      ],
+      ansia: [
+        "Sembra che qualcosa ti stia preoccupando molto. Ti va di approfondirlo insieme?",
+        "L’ansia può essere pesante da portare. Posso stare con te in questo momento.",
+        "È normale sentirsi sopraffatti a volte. Sei qui, ed è già importante."
+      ],
+      felicità: [
+        "Che bello sentire questa tua gioia. Cosa l’ha generata?",
+        "La tua serenità è preziosa. Raccontami di più di questo momento positivo.",
+        "Essere felici è qualcosa da onorare. Com'è per te viverlo ora?"
+      ],
+      solitudine: [
+        "Sentirsi soli può essere molto difficile. Vuoi parlarne con me?",
+        "La solitudine a volte ci accompagna in silenzio. Sono qui ad ascoltarti.",
+        "Anche nei momenti di solitudine, trovare qualcuno che ascolta può fare la differenza."
+      ],
+      rabbia: [
+        "Sento della forza nelle tue parole. Cosa c’è sotto quella rabbia?",
+        "Essere arrabbiati può indicare un confine violato. Vuoi esplorarlo insieme?",
+        "La tua rabbia ha un messaggio. Sono qui per accoglierlo con te."
+      ],
+      confusione: [
+        "È normale sentirsi smarriti a volte. Cosa ti confonde in particolare?",
+        "Nel disorientamento ci sono spesso intuizioni che stanno nascendo.",
+        "Possiamo restare nel dubbio insieme, senza fretta di avere risposte."
+      ]
+    };
+
+    const generalResponses = [
+      "Mi interessa profondamente ciò che stai vivendo. Vuoi parlarne ancora?",
+      "Sei riuscito a mettere in parole qualcosa di importante. Come ti fa sentire questo?",
+      "Sono qui con te, senza giudicare. Raccontami di più.",
+      "Quello che hai detto ha un valore. Da dove nasce questo pensiero?",
+      "Prendiamoci il tempo per esplorare tutto questo, insieme."
+    ];
+
+    function sendMessage() {
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      appendMessage(userText, 'user');
+      input.value = "";
+      setTimeout(() => respondToUser(userText), 600);
+    }
+
+    function appendMessage(text, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `chat-message ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+      msgDiv.textContent = text;
+      chatbox.appendChild(msgDiv);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function detectEmotion(text) {
+      for (let [emotion, patterns] of Object.entries(emotionPatterns)) {
+        if (patterns.some((regex) => regex.test(text))) {
           return emotion;
         }
       }
-    }
-    return null;
-  }
-
-  function respond(userText) {
-    const emotion = detectEmotion(userText);
-    let response;
-
-    if (emotion) {
-      const variation = reflections[Math.floor(Math.random() * reflections.length)];
-      response = variation(emotion);
-    } else if (userText.includes("?")) {
-      response = "È una domanda importante quella che poni. Che significato ha per te?";
-    } else {
-      const generic = genericResponses[Math.floor(Math.random() * genericResponses.length)];
-      response = generic(userText);
+      return null;
     }
 
-    const lastEmotion = detectEmotion(history[history.length - 2] || "");
-    if (lastEmotion && lastEmotion === emotion) {
-      response += " È un sentimento che sembra ripresentarsi spesso. Vuoi restare un attimo su questo?";
-    }
+    function respondToUser(userText) {
+      const emotion = detectEmotion(userText);
+      let response = "";
 
-    appendMessage(response, "bot");
-  }
-</script>
+      if (emotion && responseTemplates[emotion]) {
+        const replies = responseTemplates[emotion];
+        response = replies[Math.floor(Math.random() * replies.length)];
+      } else {
+        response = generalResponses[Math.floor(Math.random() * generalResponses.length)];
+      }
+
+      appendMessage(response, 'bot');
+    }
+  </script>
 
 </body>
 </html>
