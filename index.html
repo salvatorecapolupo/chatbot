@@ -4,24 +4,47 @@
   <meta charset="UTF-8">
   <title>Chat Psicologo Rogersiano</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    #chatbox { border: 1px solid #ccc; background: white; padding: 10px; height: 400px; overflow-y: auto; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f0f8; padding: 20px; }
+    #chatbox { border: 1px solid #ccc; background: white; padding: 15px; height: 450px; overflow-y: auto; border-radius: 10px; }
     .message { margin: 10px 0; }
-    .user { text-align: right; color: blue; }
-    .bot { text-align: left; color: green; }
-    #inputArea { margin-top: 10px; }
+    .user { text-align: right; color: navy; }
+    .bot { text-align: left; color: darkgreen; font-style: italic; }
+    #inputArea { margin-top: 15px; }
   </style>
 </head>
 <body>
-  <h2>Chat con lo Psicologo Rogersiano</h2>
+  <h2>Parla con lo Psicologo Rogersiano</h2>
   <div id="chatbox"></div>
   <div id="inputArea">
-    <input type="text" id="userInput" placeholder="Scrivi qui..." size="50">
+    <input type="text" id="userInput" placeholder="Come ti senti oggi?" size="60">
     <button onclick="sendMessage()">Invia</button>
   </div>
 
   <script>
     const chatbox = document.getElementById("chatbox");
+    const history = [];
+
+    const emotions = {
+      "triste": ["triste", "giù", "depress*", "abbattuto", "sconsolato"],
+      "felice": ["felice", "content*", "gioios*", "al settimo cielo"],
+      "ansioso": ["ansioso", "agitato", "in ansia", "preoccupato", "teso"],
+      "confuso": ["confuso", "disorientato", "non so", "incerto"],
+      "solo": ["solo", "isolato", "abbandonato", "incompreso"],
+      "spaventato": ["spaventato", "pauroso", "terrorizzato", "impaurito"]
+    };
+
+    const reflections = [
+      (feeling) => `Mi pare di capire che provi un senso di ${feeling}. Ti va di approfondire questa sensazione?`,
+      (feeling) => `Essere ${feeling} può essere davvero difficile. Come sta influenzando le tue giornate?`,
+      (feeling) => `Posso immaginare quanto possa essere intenso sentirsi ${feeling}. Vuoi dirmi cosa succede dentro di te?`
+    ];
+
+    const genericResponses = [
+      (text) => `Mi stai dicendo: "${text}". Mi interessa comprendere ciò che provi nel dirlo.`,
+      () => `Potresti aiutarmi a capire meglio cosa significa per te?`,
+      () => `Questo sembra importante per te. Vuoi esplorarlo un po' insieme?`,
+      () => `Sto cercando di mettermi nei tuoi panni. Raccontami ancora.`
+    ];
 
     function appendMessage(text, sender) {
       const msg = document.createElement("div");
@@ -36,29 +59,45 @@
       const text = input.value.trim();
       if (text === "") return;
       appendMessage(text, "user");
+      history.push(text);
       input.value = "";
-      setTimeout(() => respond(text), 600);
+      setTimeout(() => respond(text), 700);
+    }
+
+    function detectEmotion(text) {
+      const lowerText = text.toLowerCase();
+      for (const [emotion, keywords] of Object.entries(emotions)) {
+        for (const keyword of keywords) {
+          const pattern = new RegExp(keyword.replace("*", ".*"), "i");
+          if (pattern.test(lowerText)) {
+            return emotion;
+          }
+        }
+      }
+      return null;
     }
 
     function respond(userText) {
-      const response = rogersianReflect(userText);
+      const emotion = detectEmotion(userText);
+      let response;
+
+      if (emotion) {
+        const variation = reflections[Math.floor(Math.random() * reflections.length)];
+        response = variation(emotion);
+      } else if (userText.includes("?")) {
+        response = "È una domanda importante quella che poni. Come ti fa sentire il fatto di non avere subito una risposta?";
+      } else {
+        const generic = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+        response = generic(userText);
+      }
+
+      // Se il tema ricorre, aggiunge empatia
+      const lastEmotion = detectEmotion(history[history.length - 2] || "");
+      if (lastEmotion && lastEmotion === emotion) {
+        response += " Mi sembra che questo sentimento stia tornando spesso nei tuoi pensieri.";
+      }
+
       appendMessage(response, "bot");
-    }
-
-    function rogersianReflect(text) {
-      const feelings = ["triste", "felice", "ansioso", "confuso", "solo", "spaventato"];
-      const lowerText = text.toLowerCase();
-      const feeling = feelings.find(f => lowerText.includes(f));
-
-      if (feeling) {
-        return `Capisco che ti senti ${feeling}. Vuoi parlarmi di più di questo?`;
-      }
-
-      if (text.includes("?")) {
-        return "Mi sembra che tu stia cercando delle risposte importanti. Vuoi esplorarlo insieme?";
-      }
-
-      return `Mi stai dicendo: "${text}". Mi interessa molto capire cosa provi dicendolo.`;
     }
   </script>
 </body>
